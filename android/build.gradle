@@ -28,12 +28,14 @@ android {
 
 repositories {
     mavenCentral()
+    jcenter()
+    maven { url 'https://maven.fabric.io/public' }
 }
 
 dependencies {
     compile 'com.facebook.react:react-native:+'
     compile "com.android.support:appcompat-v7:23.0.1"
-    compile('com.twitter.sdk.android:twitter-core:3.0.0') {
+    compile('com.twitter.sdk.android:twitter-core:3.0.0@aar') {
         transitive = true
     }
 }

@@ -15,6 +15,7 @@ import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.SessionManager;
 import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterApiClient;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterConfig;
@@ -22,9 +23,13 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterAuthClient;
+import com.twitter.sdk.android.core.models.User;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+
+import retrofit2.Response;
 
 public class TwitterSigninModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
@@ -92,6 +97,22 @@ public class TwitterSigninModule extends ReactContextBaseJavaModule implements A
     }
 
     @ReactMethod
+    public void getUserInfo(final Promise promise) {
+        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+        final WritableMap map = Arguments.createMap();
+        try {
+            Response<User> userResponse = twitterApiClient.getAccountService().verifyCredentials(false, false, false).execute();
+            User twitterUser = userResponse.body();
+            map.putString("userProfileImage", twitterUser.profileImageUrl);
+            promise.resolve(map);
+        } catch (IOException e) {
+            e.printStackTrace();
+            promise.reject("getUserInfo", e.toString());
+        }
+
+    }
+
+    @ReactMethod
     public void logOut() {
 
         TwitterCore instance = TwitterCore.getInstance();
@@ -109,11 +130,7 @@ public class TwitterSigninModule extends ReactContextBaseJavaModule implements A
     }
 
     @Override
-    public void onNewIntent(Intent intent) {
-    }
-
-    @Override
-    public void onActivityResult(Activity currentActivity, int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (twitterAuthClient != null && twitterAuthClient.getRequestCode() == requestCode) {
             twitterAuthClient.onActivityResult(requestCode, resultCode, data);
         }
